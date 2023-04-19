@@ -109,6 +109,7 @@ void AD5940BIAStructInit(void)
   pBIACfg->BiaODR = 20;         /* ODR(Sample Rate) 20Hz */
   pBIACfg->FifoThresh = 4;      /* 4 */
   pBIACfg->ADCSinc3Osr = ADCSINC3OSR_2;
+	pBIACfg->ADCPgaGain_Vmeas = ADCPGA_1;
 }
 
 void AD5940_Main(void)

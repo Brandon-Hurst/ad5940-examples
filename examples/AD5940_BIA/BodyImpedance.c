@@ -44,7 +44,8 @@ AppBIACfg_Type AppBIACfg =
 
   .SinFreq = 50000.0, /* 50kHz */
 
-  .ADCPgaGain = ADCPGA_1,
+  .ADCPgaGain_Vmeas = ADCPGA_1,
+	.ADCPgaGain_Imeas	= ADCPGA_1,
   .ADCSinc3Osr = ADCSINC3OSR_2,
   .ADCSinc2Osr = ADCSINC2OSR_22,
 
@@ -237,7 +238,7 @@ static AD5940Err AppBIASeqCfgGen(void)
 
   dsp_cfg.ADCBaseCfg.ADCMuxN = ADCMUXN_HSTIA_N;
   dsp_cfg.ADCBaseCfg.ADCMuxP = ADCMUXP_HSTIA_P;
-  dsp_cfg.ADCBaseCfg.ADCPga = AppBIACfg.ADCPgaGain;
+  dsp_cfg.ADCBaseCfg.ADCPga = AppBIACfg.ADCPgaGain_Vmeas;
   
   memset(&dsp_cfg.ADCDigCompCfg, 0, sizeof(dsp_cfg.ADCDigCompCfg));
   
@@ -286,6 +287,11 @@ static AD5940Err AppBIASeqMeasureGen(void)
   AD5940Err error = AD5940ERR_OK;
   uint32_t const *pSeqCmd;
   uint32_t SeqLen;
+	
+	//Configure struct for adc pga config btw measurements
+	ADCBaseCfg_Type adc_cfg;
+	adc_cfg.ADCMuxN = ADCMUXN_HSTIA_N;
+  adc_cfg.ADCMuxP = ADCMUXP_HSTIA_P;
 
   uint32_t WaitClks;
   SWMatrixCfg_Type sw_cfg;
@@ -312,13 +318,21 @@ static AD5940Err AppBIASeqMeasureGen(void)
   sw_cfg.Tswitch = SWT_AIN1|SWT_TRTIA;
   AD5940_SWMatrixCfgS(&sw_cfg);
   
-  AD5940_ADCMuxCfgS(ADCMUXP_HSTIA_P, ADCMUXN_HSTIA_N);
+	/* Current Measurement Chunk */
+	adc_cfg.ADCPga = AppBIACfg.ADCPgaGain_Imeas; //Config PGA gain for current measurement
+	AD5940_ADCBaseCfgS(&adc_cfg);
+  
+	AD5940_ADCMuxCfgS(ADCMUXP_HSTIA_P, ADCMUXN_HSTIA_N);
   AD5940_AFECtrlS(AFECTRL_WG|AFECTRL_ADCPWR, bTRUE);  /* Enable Waveform generator, ADC power */
   AD5940_SEQGenInsert(SEQ_WAIT(16*50));
   AD5940_AFECtrlS(AFECTRL_ADCCNV|AFECTRL_DFT, bTRUE);  /* Start ADC convert and DFT */
   AD5940_SEQGenInsert(SEQ_WAIT(WaitClks));  /* wait for first data ready */  
   AD5940_AFECtrlS(AFECTRL_ADCCNV|AFECTRL_DFT|AFECTRL_WG|AFECTRL_ADCPWR, bFALSE);  /* Stop ADC convert and DFT */
 
+	/* Voltage Measurement chunk */
+	adc_cfg.ADCPga = AppBIACfg.ADCPgaGain_Vmeas;	//Config PGA gain for current measurement
+	AD5940_ADCBaseCfgS(&adc_cfg);
+	
   AD5940_ADCMuxCfgS(ADCMUXP_AIN3, ADCMUXN_AIN2);
   AD5940_AFECtrlS(AFECTRL_WG|AFECTRL_ADCPWR, bTRUE);  /* Enable Waveform generator, ADC power */
   AD5940_SEQGenInsert(SEQ_WAIT(16*50));  //delay for signal settling DFT_WAIT
