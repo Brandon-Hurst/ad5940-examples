@@ -45,7 +45,7 @@ AppBIACfg_Type AppBIACfg =
   .SinFreq = 50000.0, /* 50kHz */
 
   .ADCPgaGain_Vmeas = ADCPGA_1,
-	.ADCPgaGain_Imeas	= ADCPGA_1,
+	.ADCPgaGain_Imeas = ADCPGA_4,
   .ADCSinc3Osr = ADCSINC3OSR_2,
   .ADCSinc2Osr = ADCSINC2OSR_22,
 
@@ -321,19 +321,19 @@ static AD5940Err AppBIASeqMeasureGen(void)
 	/* Current Measurement Chunk */
 	adc_cfg.ADCPga = AppBIACfg.ADCPgaGain_Imeas; //Config PGA gain for current measurement
 	AD5940_ADCBaseCfgS(&adc_cfg);
-  
-	AD5940_ADCMuxCfgS(ADCMUXP_HSTIA_P, ADCMUXN_HSTIA_N);
+	
+  AD5940_ADCMuxCfgS(ADCMUXP_HSTIA_P, ADCMUXN_HSTIA_N);
   AD5940_AFECtrlS(AFECTRL_WG|AFECTRL_ADCPWR, bTRUE);  /* Enable Waveform generator, ADC power */
   AD5940_SEQGenInsert(SEQ_WAIT(16*50));
   AD5940_AFECtrlS(AFECTRL_ADCCNV|AFECTRL_DFT, bTRUE);  /* Start ADC convert and DFT */
   AD5940_SEQGenInsert(SEQ_WAIT(WaitClks));  /* wait for first data ready */  
   AD5940_AFECtrlS(AFECTRL_ADCCNV|AFECTRL_DFT|AFECTRL_WG|AFECTRL_ADCPWR, bFALSE);  /* Stop ADC convert and DFT */
 
-	/* Voltage Measurement chunk */
-	adc_cfg.ADCPga = AppBIACfg.ADCPgaGain_Vmeas;	//Config PGA gain for current measurement
+	/* Voltage measurement Chunk */
+	adc_cfg.ADCPga = AppBIACfg.ADCPgaGain_Vmeas; //Config PGA gain for voltage measurement
 	AD5940_ADCBaseCfgS(&adc_cfg);
-	
-  AD5940_ADCMuxCfgS(ADCMUXP_AIN3, ADCMUXN_AIN2);
+
+	AD5940_ADCMuxCfgS(ADCMUXP_AIN3, ADCMUXN_AIN2);
   AD5940_AFECtrlS(AFECTRL_WG|AFECTRL_ADCPWR, bTRUE);  /* Enable Waveform generator, ADC power */
   AD5940_SEQGenInsert(SEQ_WAIT(16*50));  //delay for signal settling DFT_WAIT
   AD5940_AFECtrlS(AFECTRL_ADCCNV|AFECTRL_DFT, bTRUE);  /* Start ADC convert and DFT */
@@ -529,6 +529,10 @@ static AD5940Err AppBIARegModify(int32_t * const pData, uint32_t *pDataCount)
 /* Depending on the data type, do appropriate data pre-process before return back to controller */
 static AD5940Err AppBIADataProcess(int32_t * const pData, uint32_t *pDataCount)
 {
+	float pga_gains[] = {1.0f, 1.5f, 2.0f, 4.0f, 9.0f};
+	float pga_gain_v = pga_gains[AppBIACfg.ADCPgaGain_Vmeas];
+	float pga_gain_i = pga_gains[AppBIACfg.ADCPgaGain_Imeas];
+	
   uint32_t DataCount = *pDataCount;
   uint32_t ImpResCount = DataCount/4;
 
@@ -557,9 +561,9 @@ static AD5940Err AppBIADataProcess(int32_t * const pData, uint32_t *pDataCount)
     float VoltMag,VoltPhase;
     float CurrMag, CurrPhase;
 
-    VoltMag = sqrt((float)pDftVolt->Real*pDftVolt->Real+(float)pDftVolt->Image*pDftVolt->Image);
+    VoltMag = sqrt((float)pDftVolt->Real*pDftVolt->Real+(float)pDftVolt->Image*pDftVolt->Image) / pga_gain_v;
     VoltPhase = atan2(-pDftVolt->Image,pDftVolt->Real);
-    CurrMag = sqrt((float)pDftCurr->Real*pDftCurr->Real+(float)pDftCurr->Image*pDftCurr->Image);
+    CurrMag = sqrt((float)pDftCurr->Real*pDftCurr->Real+(float)pDftCurr->Image*pDftCurr->Image) / pga_gain_i;
     CurrPhase = atan2(-pDftCurr->Image,pDftCurr->Real);
 
     VoltMag = VoltMag/CurrMag*AppBIACfg.RtiaCurrValue[0];
