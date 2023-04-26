@@ -56,7 +56,8 @@ typedef struct
   uint8_t ADCSinc3Osr;          /* SINC3 OSR selection. ADCSINC3OSR_2, ADCSINC3OSR_4 */
   uint8_t ADCSinc2Osr;          /* SINC2 OSR selection. ADCSINC2OSR_22...ADCSINC2OSR_1333 */
   uint32_t HstiaRtiaSel;        /* Use internal RTIA, select from RTIA_INT_200, RTIA_INT_1K, RTIA_INT_5K, RTIA_INT_10K, RTIA_INT_20K, RTIA_INT_40K, RTIA_INT_80K, RTIA_INT_160K */
-  uint32_t CtiaSel;             /* Select CTIA in pF unit from 0 to 31pF */
+  uint32_t ExtRtia;							/* External RTIA value */
+	uint32_t CtiaSel;             /* Select CTIA in pF unit from 0 to 31pF */
 
   uint32_t DftNum;              /* DFT number */
   uint32_t DftSrc;              /* DFT Source */

@@ -26,16 +26,17 @@ AppBIACfg_Type AppBIACfg =
   .SeqStartAddrCal = 0,
   .MaxSeqLenCal = 0,
 
-  .ReDoRtiaCal = bFALSE,
+  .ReDoRtiaCal = bTRUE,
   .SysClkFreq = 16000000.0,
   .WuptClkFreq = 32000.0,
   .AdcClkFreq = 16000000.0,
   .BiaODR = 20.0, /* 20.0 Hz*/
   .NumOfData = -1,
-  .RcalVal = 10000.0, /* 10kOhm */
+  .RcalVal = 100.0, /* 100Ohm */
 
   .PwrMod = AFEPWR_LP,
-  .HstiaRtiaSel = HSTIARTIA_1K,
+  .HstiaRtiaSel = HSTIARTIA_OPEN,
+	.ExtRtia = 100,
   .CtiaSel = 16,
   .ExcitBufGain = EXCITBUFGAIN_2,
   .HsDacGain = HSDACGAIN_1,
@@ -44,7 +45,7 @@ AppBIACfg_Type AppBIACfg =
 
   .SinFreq = 50000.0, /* 50kHz */
 
-  .ADCPgaGain = ADCPGA_1,
+  .ADCPgaGain = ADCPGA_4,
   .ADCSinc3Osr = ADCSINC3OSR_2,
   .ADCSinc2Osr = ADCSINC2OSR_22,
 
@@ -183,9 +184,10 @@ static AD5940Err AppBIASeqCfgGen(void)
   hs_loop.HsTiaCfg.DiodeClose = bFALSE;
   hs_loop.HsTiaCfg.HstiaBias = HSTIABIAS_1P1;
   hs_loop.HsTiaCfg.HstiaCtia = AppBIACfg.CtiaSel; /* 31pF + 2pF */
-  hs_loop.HsTiaCfg.HstiaDeRload = HSTIADERLOAD_OPEN;
-  hs_loop.HsTiaCfg.HstiaDeRtia = HSTIADERTIA_OPEN;
+  hs_loop.HsTiaCfg.HstiaDeRload = HSTIADERLOAD_0R;
+  hs_loop.HsTiaCfg.HstiaDeRtia = HSTIADERTIA_TODE;
   hs_loop.HsTiaCfg.HstiaRtiaSel = AppBIACfg.HstiaRtiaSel;
+	hs_loop.HsTiaCfg.ExtRtia = AppBIACfg.ExtRtia;
 
   hs_loop.SWMatCfg.Dswitch = SWD_OPEN;
   hs_loop.SWMatCfg.Pswitch = SWP_PL|SWP_PL2;
@@ -377,9 +379,10 @@ static AD5940Err AppBIARtiaCal(void)
   hsrtia_cal.HsTiaCfg.DiodeClose = bFALSE;
   hsrtia_cal.HsTiaCfg.HstiaBias = HSTIABIAS_1P1;
   hsrtia_cal.HsTiaCfg.HstiaCtia = AppBIACfg.CtiaSel;
-  hsrtia_cal.HsTiaCfg.HstiaDeRload = HSTIADERLOAD_OPEN;
+  hsrtia_cal.HsTiaCfg.HstiaDeRload = HSTIADERLOAD_0R;
   hsrtia_cal.HsTiaCfg.HstiaDeRtia = HSTIADERTIA_TODE;
-  hsrtia_cal.HsTiaCfg.HstiaRtiaSel = AppBIACfg.HstiaRtiaSel;
+  hsrtia_cal.HsTiaCfg.HstiaRtiaSel = HSTIARTIA_OPEN;
+	hsrtia_cal.HsTiaCfg.ExtRtia = AppBIACfg.ExtRtia;
   hsrtia_cal.SysClkFreq = AppBIACfg.SysClkFreq;
   hsrtia_cal.fFreq = AppBIACfg.SweepCfg.SweepStart;
 
