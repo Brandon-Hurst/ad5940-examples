@@ -12,6 +12,8 @@ Analog Devices Software License Agreement.
 *****************************************************************************/
 #include "BodyImpedance.h"
 
+#define ADI_DEBUG 1
+
 /* 
   Application configuration structure. Specified by user from template.
   The variables are usable in this whole application.
@@ -26,7 +28,7 @@ AppBIACfg_Type AppBIACfg =
   .SeqStartAddrCal = 0,
   .MaxSeqLenCal = 0,
 
-  .ReDoRtiaCal = bFALSE,
+  .ReDoRtiaCal = bTRUE,
   .SysClkFreq = 16000000.0,
   .WuptClkFreq = 32000.0,
   .AdcClkFreq = 16000000.0,
@@ -421,6 +423,9 @@ static AD5940Err AppBIARtiaCal(void)
   {
     hsrtia_cal.fFreq = AppBIACfg.SinFreq;
     AD5940_HSRtiaCal(&hsrtia_cal, AppBIACfg.RtiaCurrValue);
+#ifdef ADI_DEBUG
+      ADI_Print("Freq:%.2f, RTIA: Mag:%f Ohm, Phase:%.3f\n", hsrtia_cal.fFreq, AppBIACfg.RtiaCurrValue[0], AppBIACfg.RtiaCurrValue[1]);
+#endif
   }
   return AD5940ERR_OK;
 }
